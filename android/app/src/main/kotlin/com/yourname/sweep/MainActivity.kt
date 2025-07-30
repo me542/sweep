@@ -1,4 +1,4 @@
-package com.example.my_app
+package com.yourname.sweep
 
 import io.flutter.embedding.android.FlutterActivity
 

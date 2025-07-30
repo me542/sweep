@@ -1,9 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:my_app/routes/routes.dart'; // Import the routes map
+import 'package:flutter/services.dart';
+import 'package:sweep/routes/routes.dart';
+import 'package:sweep/hive&web/hive.dart';
 
-void main() => runApp(MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  //Lock orientation to portrait only
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
+  //Initialize Hive before running app
+  await HiveService.init();
+
+  runApp(const MyApp());
+}
 
 class MyApp extends StatefulWidget {
+  const MyApp({super.key});
   static final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
   @override

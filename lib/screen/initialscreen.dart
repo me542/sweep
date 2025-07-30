@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:my_app/screen/get.dart';
+import 'package:sweep/screen/get.dart';
 
 class InitialScreen extends StatefulWidget {
   const InitialScreen({super.key});
@@ -26,7 +26,7 @@ class _InitialScreenState extends State<InitialScreen> {
       backgroundColor: Colors.white,
       body: Center(
         child: Image.asset(
-          'assets/logo.png', // ✅ Correct path
+          'assets/logo.png',
           width: 200,
           height: 200,
         ),

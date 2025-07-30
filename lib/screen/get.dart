@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sweep/screen/homescreen.dart';
 
 class GetStartedScreen extends StatelessWidget {
   const GetStartedScreen({super.key});
@@ -17,14 +18,14 @@ class GetStartedScreen extends StatelessWidget {
         child: Stack(
           children: [
             Positioned(
-              top: -100,
-              left: -100,
+              top: -250,
+              left: -280,
               child: Container(
-                height: 400,
-                width: 400,
+                height: 800,
+                width: 800,
                 decoration: BoxDecoration(
                   color: Color(0xFF06703C),
-                  borderRadius: BorderRadius.circular(200),
+                  borderRadius: BorderRadius.circular(800),
                 ),
               ),
             ),
@@ -32,29 +33,15 @@ class GetStartedScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  RichText(
-                    text: TextSpan(
-                      style: const TextStyle(
-                        fontSize: 48,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF054120),
-                      ),
-                      children: [
-                        TextSpan(
-                          text: 'S',
-                          style: TextStyle(
-                            fontSize: 60,
-                            letterSpacing: 2,
-                          ),
-                        ),
-                        TextSpan(
-                          text: 'WEEP',
-                        ),
-                      ],
-                    ),
+                  const SizedBox(height: 400),
+                  Image.asset(
+                    'assets/logo1.png', // ✅ Replace with your image path
+                    width: 300,
+                    height: 300,
+                    fit: BoxFit.contain,
                   ),
                   const SizedBox(height: 10),
-                  // You can add an image/icon here
+                  // Optional: You can add more widgets here
                 ],
               ),
             ),
@@ -64,8 +51,11 @@ class GetStartedScreen extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 40),
                 child: ElevatedButton(
                   onPressed: () {
-                    // Navigator.push(...) or any logic you want
-                  },
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const homescreen()),
+                    );
+                  }, // ✅ You missed this comma
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFF054120),
                     padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 16),
@@ -85,7 +75,7 @@ class GetStartedScreen extends StatelessWidget {
                   ),
                 ),
               ),
-            ),
+            )
           ],
         ),
       ),
