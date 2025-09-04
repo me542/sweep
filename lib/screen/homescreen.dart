@@ -20,7 +20,7 @@ class _HomeScreenState extends State<homescreen> with WidgetsBindingObserver {
   String _wasteWeight = "0"; // current waste value
 
   String _waterHeightMax = "100"; // user-defined max
-  String _wasteWeightMax = "10";  // user-defined max
+  String _wasteWeightMax = "1000"; // user-defined max
 
   double _waterMonitorPercent = 0.0;
   double _wasteMonitorPercent = 0.0;
@@ -64,7 +64,7 @@ class _HomeScreenState extends State<homescreen> with WidgetsBindingObserver {
     setState(() {
       _isStarted = _prefs.getBool('switchState') ?? false;
       _waterHeightMax = _prefs.getString('waterHeightMax') ?? "100";
-      _wasteWeightMax = _prefs.getString('wasteWeightMax') ?? "10";
+      _wasteWeightMax = _prefs.getString('wasteWeightMax') ?? "1000";
       _waterHeight = _prefs.getString('currentWaterHeight') ?? "0";
       _wasteWeight = _prefs.getString('currentWasteWeight') ?? "0";
 
@@ -96,7 +96,6 @@ class _HomeScreenState extends State<homescreen> with WidgetsBindingObserver {
     bool waterTriggered = false;
     bool wasteTriggered = false;
     bool containerTriggered = false;
-    bool emergencySignalTriggered = false;
 
     for (var part in parts) {
       // ----------------- WATER -----------------
@@ -108,17 +107,14 @@ class _HomeScreenState extends State<homescreen> with WidgetsBindingObserver {
 
         int percent = (_waterMonitorPercent * 100).round();
 
-        // Determine range
         int? rangeBucket;
         if (percent >= 25 && percent <= 49) rangeBucket = 25;
         else if (percent >= 50 && percent <= 74) rangeBucket = 50;
         else if (percent >= 75 && percent <= 99) rangeBucket = 75;
         else if (percent >= 100) rangeBucket = 100;
 
-        // Get last bucket from prefs
         int? lastBucket = _prefs.getInt('lastWaterBucket_$todayStr');
 
-        // Notify if changed
         if (rangeBucket != null && rangeBucket != lastBucket) {
           NotificationService.showWaterLevelNotification(rangeBucket);
           await _prefs.setInt('lastWaterBucket_$todayStr', rangeBucket);
@@ -137,13 +133,14 @@ class _HomeScreenState extends State<homescreen> with WidgetsBindingObserver {
         final maxKg = double.tryParse(_wasteWeightMax) ?? 10.0;
         _wasteMonitorPercent = (kg / maxKg).clamp(0, 1);
 
-        int percent = (_wasteMonitorPercent * 100).round();
+        // Scale to 1000 instead of 100
+        int percent = (_wasteMonitorPercent * 1000).round();
 
         int? rangeBucket;
-        if (percent >= 25 && percent <= 49) rangeBucket = 25;
-        else if (percent >= 50 && percent <= 74) rangeBucket = 50;
-        else if (percent >= 75 && percent <= 99) rangeBucket = 75;
-        else if (percent >= 100) rangeBucket = 100;
+        if (percent >= 250 && percent <= 499) rangeBucket = 250;
+        else if (percent >= 500 && percent <= 749) rangeBucket = 500;
+        else if (percent >= 750 && percent <= 999) rangeBucket = 750;
+        else if (percent >= 1000) rangeBucket = 1000;
 
         int? lastBucket = _prefs.getInt('lastWasteBucket_$todayStr');
 
@@ -167,41 +164,29 @@ class _HomeScreenState extends State<homescreen> with WidgetsBindingObserver {
       else if (part == "E") {
         bool lastEmergency = _prefs.getBool('lastEmergencyTriggered_$todayStr') ?? false;
 
-        // Only trigger if new E signal (not already active)
         if (!lastEmergency) {
           emergencyCount++;
           await _prefs.setBool('lastEmergencyTriggered_$todayStr', true);
-          // optional: show notification
           NotificationService.showEmergencyNotification();
         }
       } else {
-        // If no E in this message, reset the flag
         await _prefs.setBool('lastEmergencyTriggered_$todayStr', false);
       }
     }
 
-    // Increment emergency count if water/waste
     if (waterTriggered || wasteTriggered) {
       emergencyCount++;
     }
 
-    // Increment container count if "C" received
     if (containerTriggered) {
       containerCount++;
     }
 
-
-    // Save counts
     await _prefs.setInt('emergency_$todayStr', emergencyCount);
     await _prefs.setInt('container_$todayStr', containerCount);
 
     setState(() {});
   }
-
-
-
-
-
 
   Future<void> _resetValues() async {
     setState(() {
@@ -234,7 +219,7 @@ class _HomeScreenState extends State<homescreen> with WidgetsBindingObserver {
 
     await showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // allows it to resize with keyboard
+      isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -242,7 +227,7 @@ class _HomeScreenState extends State<homescreen> with WidgetsBindingObserver {
       builder: (context) {
         return Padding(
           padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom, // moves above keyboard
+            bottom: MediaQuery.of(context).viewInsets.bottom,
             left: 20,
             right: 20,
             top: 20,
@@ -356,16 +341,16 @@ class _HomeScreenState extends State<homescreen> with WidgetsBindingObserver {
         children: [
           Column(
             children: [
-              _buildCircleIndicator(Icons.delete, "${(_wasteMonitorPercent * 100).round()}%"),
+              _buildCircleIndicator(Icons.delete, false),
               const SizedBox(height: 20),
-              _buildCircleIndicator(Icons.water_drop, "${(_waterMonitorPercent * 100).round()}%"),
+              _buildCircleIndicator(Icons.water_drop, true),
             ],
           ),
           Row(
             children: [
-              _buildVerticalBar(Icons.delete, _wasteMonitorPercent),
+              _buildVerticalBar(Icons.delete, _wasteMonitorPercent, false),
               const SizedBox(width: 20),
-              _buildVerticalBar(Icons.water_drop, _waterMonitorPercent),
+              _buildVerticalBar(Icons.water_drop, _waterMonitorPercent, true),
             ],
           ),
         ],
@@ -419,16 +404,24 @@ class _HomeScreenState extends State<homescreen> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildCircleIndicator(IconData icon, String text) {
-    final isWater = icon == Icons.water_drop;
+  Widget _buildCircleIndicator(IconData icon, bool isWater) {
     final double value = isWater ? _waterMonitorPercent : _wasteMonitorPercent;
-    final int percentage = (value * 100).round();
+    final int percentage = isWater
+        ? (value * 100).round()
+        : (value * 1000).round();
 
     Color progressColor;
-    if (percentage <= 25) progressColor = Colors.green;
-    else if (percentage <= 50) progressColor = Colors.yellow;
-    else if (percentage <= 75) progressColor = Colors.orange;
-    else progressColor = Colors.red;
+    if (isWater) {
+      if (percentage <= 25) progressColor = Colors.green;
+      else if (percentage <= 50) progressColor = Colors.yellow;
+      else if (percentage <= 75) progressColor = Colors.orange;
+      else progressColor = Colors.red;
+    } else {
+      if (percentage <= 250) progressColor = Colors.green;
+      else if (percentage <= 500) progressColor = Colors.yellow;
+      else if (percentage <= 750) progressColor = Colors.orange;
+      else progressColor = Colors.red;
+    }
 
     return Stack(
       alignment: Alignment.center,
@@ -447,7 +440,7 @@ class _HomeScreenState extends State<homescreen> with WidgetsBindingObserver {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              text,
+              "$percentage",
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             Icon(icon, size: 25, color: const Color(0xFF06703C)),
@@ -457,7 +450,11 @@ class _HomeScreenState extends State<homescreen> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildVerticalBar(IconData icon, double fillPercent) {
+  Widget _buildVerticalBar(IconData icon, double fillPercent, bool isWater) {
+    final int percentage = isWater
+        ? (fillPercent * 100).round()
+        : (fillPercent * 1000).round();
+
     return Stack(
       alignment: Alignment.bottomCenter,
       children: [
@@ -479,7 +476,19 @@ class _HomeScreenState extends State<homescreen> with WidgetsBindingObserver {
         ),
         Positioned(
           top: 8,
-          child: Icon(icon, color: const Color(0xFF06703C)),
+          child: Column(
+            children: [
+              Icon(icon, color: const Color(0xFF06703C)),
+              Text(
+                "$percentage",
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF06703C),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );

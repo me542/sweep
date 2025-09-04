@@ -38,7 +38,7 @@ class NotificationService {
       }
 
       // WASTE channels
-      for (var bucket in [25, 50, 75, 100]) {
+      for (var bucket in [250, 500, 750, 1000]) {
         final channel = AndroidNotificationChannel(
           'waste_level_$bucket',
           'Waste Level $bucket%',
@@ -99,20 +99,20 @@ class NotificationService {
     int bucket;
     String body;
 
-    if (percent >= 25 && percent <= 49) {
-      bucket = 25;
-      body = 'Water level is in range 25–49%. Please monitor closely.';
-    } else if (percent >= 50 && percent <= 74) {
-      bucket = 50;
-      body = 'Water level is in range 50–74%. Normal range.';
-    } else if (percent >= 75 && percent <= 99) {
-      bucket = 75;
-      body = 'Water level is in range 75–99%. Tank filling efficiently.';
-    } else if (percent >= 100) {
-      bucket = 100;
-      body = '⚠ Water level is 100%. Overflow risk.';
+    if (percent >= 250 && percent <= 499) {
+      bucket = 250;
+      body = 'Water level is in range 250–499%. Please monitor closely.';
+    } else if (percent >= 500 && percent <= 749) {
+      bucket = 500;
+      body = 'Water level is in range 500–749%. Normal range.';
+    } else if (percent >= 750 && percent <= 999) {
+      bucket = 750;
+      body = 'Water level is in range 750–999. Tank filling efficiently.';
+    } else if (percent >= 1000) {
+      bucket = 1000;
+      body = '⚠ Water level is 1000%. Overflow risk.';
     } else {
-      return; // ignore below 25%
+      return; // ignore below 250%
     }
 
     final androidDetails = AndroidNotificationDetails(
