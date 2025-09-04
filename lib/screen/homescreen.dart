@@ -374,7 +374,7 @@ class _HomeScreenState extends State<homescreen> with WidgetsBindingObserver {
               },
             ),
             child: Text(
-              "Waste Max Weight (kg): $_wasteWeight / $_wasteWeightMax",
+              "Waste Max Weight (g): $_wasteWeight / $_wasteWeightMax",
               style: const TextStyle(
                   color: Colors.black54,
                   fontSize: 16,
